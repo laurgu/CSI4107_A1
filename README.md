@@ -25,16 +25,10 @@ This project is an infomation retrieval system built using Apache Lucene.
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/IshanPhadte776/CSI4107.git
+   git clone https://github.com/laurgu/CSI4107_A1.git
    ```
 
-2. **Navigate to the project directory:**
-
-   ```bash
-   cd A1-lucene
-   ```
-
-3. **Build the project using gradle wrapper:**
+2. **Build the project using gradle wrapper:**
 
    ```bash
    ./gradlew build
@@ -42,7 +36,7 @@ This project is an infomation retrieval system built using Apache Lucene.
 
    **_Or using gradle if installed:_** `gradle build`
 
-4. **Build the index:**
+3. **Build the index:**
 
    ```bash
    ./gradlew runLuceneIndex
@@ -50,7 +44,7 @@ This project is an infomation retrieval system built using Apache Lucene.
 
    **_Or if gradle installed:_** `gradle runLuceneIndex`
 
-5. **Run the the search function using gradle wrapper:**
+4. **Run the the search function using gradle wrapper:**
 
    ```bash
    ./gradlew run
@@ -58,7 +52,7 @@ This project is an infomation retrieval system built using Apache Lucene.
 
    **_Or using gradle if installed:_** `gradle run`
 
-6. **To view results, navigate to app directory then open the Results.txt file:**
+5. **To view results, navigate to app directory then open the Results.txt file:**
 
    ```bash
    cd app
@@ -90,3 +84,14 @@ The index is created using Lucene's "Index Writer". This index is written to a f
 ### Optimizations
 
 Initially, we implemented our IR system using the tf-idf weighting system. For comparison we implemented this Lucene version and found it seemed to produce more accurate results without significantly impacting the runtime.
+
+### Data Structures 
+
+A Set was used for stops words because each stop word is unique and order isn't required
+
+A Dictionary was used for the inverted index because we needed a key value data structure and a dictionary fits the description 
+
+
+### Sample of 100 Tokens 
+
+['nation', 'governors', 'appealed', 'whitehouse', 'sunday', 'relief', '163', 'federal', 'rules', 'regulations', 'andheard', 'former', 'governor', 'call', 'constitutional', 'convention', 'torestore', 'states', 'rights', 'new', 'hampshire', 'gov', 'john', 'h', 'sununu', 'opening', 'nationalgovernors', 'association', 'winter', 'meeting', 'said', 'time', 'hascome', 'press', 'new', 'division', 'authority', 'statesand', 'washington', 'erosion', 'fundamental', 'balance', 'struck200', 'years', 'ago', 'philadelphia', 'sununu', 'nga', 'chairman', 'said', 'ata', 'news', 'conference', 'gaveling', 'first', 'plenary', 'session', 'toorder', 'president', 'reagan', 'black', 'tie', 'dinner', 'governors', 'sundaynight', 'told', 'governors', 'envied', 'balanced', 'budgetrequirements', 'line', 'item', 'vetoes', 'many', 'possess', 'notone', 'would', 'put', 'mess', 'inwashington', 'budget', 'time', 'president', 'said', 'also', 'said', 'want', 'tie', 'successor', 'hands', 'butexpressed', 'hope', 'next', 'president', 'would', 'continue', 'tradition', 'ofinviting', 'governors', 'white']
