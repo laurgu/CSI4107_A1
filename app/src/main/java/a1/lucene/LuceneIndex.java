@@ -116,9 +116,13 @@ public class LuceneIndex {
         String folderPath = "./coll";
         // Process XML documents and accumulate data
         Map<String, String> docData = processDocumentsInFolder(folderPath);
+
+        System.out.println("DOCS: " + docData.size());
         // Build the Lucene index from the processed data
         buildIndex(docData, "./index_dir");
         // Open the Lucene index reader for further operations if needed
         IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get("./index_dir")));
+
+        reader.close();
     }
 }

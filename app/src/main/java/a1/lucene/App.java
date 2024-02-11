@@ -49,7 +49,6 @@ public class App {
         ScoreDoc[] scoreDocs = topDocs.scoreDocs;
 
         // Print query number and number of results
-        System.out.println(queryNum + ": " + scoreDocs.length);
 
         int counter = 1;
         // Iterate over the top documents and store results
@@ -62,6 +61,7 @@ public class App {
 
             // Create result string and add to the results list
             String result = queryNum + " Q0 " + docIdString + " " + counter + " " + score + " " + "run_name\n";
+            System.out.println(result);
             counter++;
             allResults.add(result);
         }
@@ -110,18 +110,12 @@ public class App {
         ArrayList<String> allResults = new ArrayList<>();
 
         // Iterate over each query and perform search
-        for (int i = 1; i <= queries.size(); i++) {
-            performSearch(index, queries.get(i - 1), customAnalyzer, allResults, i);
+        for (int i = 0; i < queries.size(); i++) {
+            performSearch(index, queries.get(i), customAnalyzer, allResults, i + 1);
         }
-
-        // Print the total number of queries and results
-        System.out.println("Queries " + queries.size());
-        System.out.println("Results " + allResults.size());
 
         // Write results to a file
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("Results.txt"))) {
-            int counter = 1;
-            int queryNum = 1;
             for (String result : allResults) {
                 writer.write(result);
             }
