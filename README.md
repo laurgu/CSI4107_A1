@@ -129,8 +129,6 @@ _Query 25: 'NRA Prevention of Gun Control Legislation'_
 
 From result screenshots, we note that the scores are overall significantly higher for query 25 compared to query 1 indicating that the system found documents more relevant to query 25 than query 10.
 
-We evaluated the performance of our system using trev_eval and expected search results document provided. Below are screenshots of our results.
-
 Compared to the expected results, below, ours quite different. It's quite possible that our system identified documents as relevant because the words the query and document had in common are rare. This seems to be the case for query 1's first result which contains the word overcrowded, a word not present in the top 100 most frequently occuring words.
 
 ![alt text](./Q1_Expected_SC.png)
@@ -140,6 +138,11 @@ _Query 1: Expected Results_
 ![alt text](./Q25_Expected_SC.png)
 
 _Query 25: Expected Results_
+
+We evaluated the performance of our system using trev_eval and expected search results document provided. Below are screenshots of our results.
+
+![alt text](./Trec_Eval_SC.png)
+
 
 ### Optimizations
 
