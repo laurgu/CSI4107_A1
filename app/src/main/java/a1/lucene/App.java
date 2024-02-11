@@ -8,15 +8,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import main.java.a1.lucene.CustomAnalyzer;
 
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.en.PorterStemFilter;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -24,7 +23,8 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.queryparser.classic.ParseException;
+
+import main.java.a1.lucene.CustomAnalyzer;
 
 public class App {
 
@@ -39,20 +39,16 @@ public class App {
         // Use custom analyzer and paser
         QueryParser queryParser = new QueryParser("processedText", customAnalyzer);
 
-        String sanitizedQueryString = sanitizeQueryString(queryString);
-
-        // Apply same prepreocessing to query string
+        String sanitizedQueryString = sanitizeQueryString(queryString, customAnalyzer);
+        // Rreocess query string
         Query query = queryParser.parse(sanitizedQueryString);
 
         // Perform search and get top 1000 documents
         TopDocs topDocs = searcher.search(query, 1000);
         ScoreDoc[] scoreDocs = topDocs.scoreDocs;
 
-        System.out.println("STRING: " + sanitizedQueryString);
-
-        // Print query number and number of results
-
         int counter = 1;
+
         // Iterate over the top documents and store results
         for (ScoreDoc scoreDoc : scoreDocs) {
             int docId = scoreDoc.doc;
@@ -67,16 +63,32 @@ public class App {
             allResults.add(result);
         }
 
-        System.out.println("Query: " + queryNum + "    Results: " + scoreDocs.length);
     }
 
-    private static String sanitizeQueryString(String queryString) {
-
+    private static String sanitizeQueryString(String queryString, CustomAnalyzer customAnalyzer)
+            throws IOException {
         String regex = "[-+|!{}\\[\\]^\"~*?:\\\\/]";
+
         // Replace special characters with a space
         String sanitizedQueryString = queryString.toLowerCase().replaceAll(regex, " ");
 
-        return sanitizedQueryString;
+        // Apply Porter stemming
+        try (TokenStream tokenStream = customAnalyzer.tokenStream("processedText", sanitizedQueryString)) {
+            PorterStemFilter porterStemFilter = new PorterStemFilter(tokenStream);
+            CharTermAttribute charTermAttribute = porterStemFilter.addAttribute(CharTermAttribute.class);
+
+            porterStemFilter.reset();
+            StringBuilder stemmedQueryString = new StringBuilder();
+
+            while (porterStemFilter.incrementToken()) {
+                stemmedQueryString.append(charTermAttribute.toString()).append(" ");
+            }
+
+            porterStemFilter.end();
+            porterStemFilter.close();
+
+            return stemmedQueryString.toString().trim();
+        }
     }
 
     // Function reads queries from file and puts them into a list

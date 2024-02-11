@@ -73,7 +73,7 @@ Initial Fork from https://github.com/IshanPhadte776/CSI4107
 2. **Document Extraction:** The seperate documents in each file are extracted by identifying \<DOC> tags. The \<DOCNO> and \<TEXT> of each document are extracted. <TEXT> is converted to lowercase to allow stopwords to be properly removed in the following section.
 
 3. **Preprocessing:** The documents are preprocessed using a custom analyzer that extends the analyzer class provided by Lucene.
-   It tokenizes words and removes stopwords.
+   It tokenizes words and removes stopwords and a port stemmer is used.
 
 ### Part 2
 
@@ -84,10 +84,6 @@ The index is created using Lucene's "Index Writer". This index is written to a f
 1. The query string is preprocessed using the custome analyzer, like how documents are preprocessed in Part 1.
 
 2. Querying is done using Lucene's "Index Searcher" to search the index build in Part 2. It retrieves the top 1000 results for a given query and these results are written to a txt file.
-
-### Optimizations
-
-Initially, we implemented our IR system using the tf-idf weighting system. For comparison we implemented this Lucene version and found it seemed to produce more accurate results without significantly impacting the runtime.
 
 ### Data Structures
 
@@ -107,7 +103,7 @@ In App.java:
 - `ArrayList<String> allResults`: used to store the results of the queries in a list
 - `CustomAnalyzer customAnalyzer`: an instance of the CustomAnalyzer class which is used for creating query parser with customized preprocessing. The query parser is used for parsing the query string and generating Lucene queries based on the string.
 
-### Sample of 100 Tokens
+### Vocabulary and Tokens
 
 Lucene create a folder `CSI4107_A1\app\index_dir` for it's index that contains he inverted index structure, which includes information about terms, their positions, and other metadata. These files are in binary and other Lucene specfic file formats. It can be interpreted using a software called Luke to view the actual terms in the index. Below is a preview of the tokens in the index, displayed in Luke.
 
@@ -117,6 +113,34 @@ Lucene create a folder `CSI4107_A1\app\index_dir` for it's index that contains h
 
 ![alt text](./Luke_SC_3.png)
 
+In totaly the vocabulary had 185530 terms.
+
 ### Results
 
-For some queries, fewer than 1000 queries were provided as only the provided queries were deemed relevant
+Below are screenshots of our first 10 results for queries 1 and 25.
+
+![alt text](./Q1_SC.png)
+
+_Query 1: 'Coping with overcrowded prisons' Results_
+
+![alt text](./Q25_SC.png)
+
+_Query 25: 'NRA Prevention of Gun Control Legislation'_
+
+From result screenshots, we note that the scores are overall significantly higher for query 25 compared to query 1 indicating that the system found documents more relevant to query 25 than query 10.
+
+We evaluated the performance of our system using trev_eval and expected search results document provided. Below are screenshots of our results.
+
+Compared to the expected results, below, ours quite different. It's quite possible that our system identified documents as relevant because the words the query and document had in common are rare. This seems to be the case for query 1's first result which contains the word overcrowded, a word not present in the top 100 most frequently occuring words.
+
+![alt text](./Q1_Expected_SC.png)
+
+_Query 1: Expected Results_
+
+![alt text](./Q25_Expected_SC.png)
+
+_Query 25: Expected Results_
+
+### Optimizations
+
+Initially, we implemented our IR system using the tf-idf weighting system. For comparison we implemented this Lucene version and found it seemed to produce more accurate results without significantly impacting the runtime. To improve the quality of results, we used port stemming which we found improved our trec_eval scores in every measure in the produced report.
