@@ -36,6 +36,6 @@ application {
 }
 
 tasks.register<JavaExec>("runLuceneIndex") {
-    main = "main.java.a1.lucene.LuceneIndex"
+    mainClass.set("main.java.a1.lucene.LuceneIndex")
     classpath = sourceSets["main"].runtimeClasspath
 }
