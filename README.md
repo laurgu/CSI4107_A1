@@ -70,10 +70,10 @@ Initial Fork from https://github.com/IshanPhadte776/CSI4107
 
 1. **Jsoup Parsing:** The files in the coll folder are read using Jsoup which allows ill-formatted xml files to still be parsed.
 
-2. **Document Extraction:** The seperate documents in each file are extracted by identifying \<DOC> tags. The \<DOCNO> and \<TEXT> of each document are extracted.
+2. **Document Extraction:** The seperate documents in each file are extracted by identifying \<DOC> tags. The \<DOCNO> and \<TEXT> of each document are extracted. <TEXT> is converted to lowercase to allow stopwords to be properly removed in the following section. 
 
 3. **Preprocessing:** The documents are preprocessed using a custom analyzer that extends the analyzer class provided by Lucene.
-   It tokenizes words and applies lowercasing and stop word removal.
+   It tokenizes words and removes stopwords.
 
 ### Part 2
 
