@@ -22,7 +22,8 @@ This project is an infomation retrieval system built using Apache Lucene.
 
 ## Instructions
 
-Code can be found at https://github.com/laurgu/CSI4107_A1 
+Final Code can be found at https://github.com/laurgu/CSI4107_A1 
+Initial Fork from https://github.com/IshanPhadte776/CSI4107 
 
 1. **Clone the repository:**
 
