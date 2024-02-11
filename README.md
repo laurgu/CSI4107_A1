@@ -143,7 +143,14 @@ We evaluated the performance of our system using trev_eval and expected search r
 
 ![alt text](./Trec_Eval_SC.png)
 
-
+Based on the trec_eval report, we conclude:
+- Mean Average Precision (MAP): We achieved a 0.2998/1 which could be improved with future fine tuning of the system
+- Reciprocal Rank: We achieved a 0.5813/1 which is decent and indicates relatively efficient retrieval of documents
+- Precision at various cutoffs (P_5, P_10, P_20, etc.): We notice our measures are decent with fewer documents but drop when the cutoff increases 
+- R-Precision: We achieved a 0.2982/1 which is low and indicates the system ...
+- Binary Preference: We achieved a bpref score of 0.3397/1.0, indicating a reasonable ability of our system to rank relevant documents higher than non-relevant ones
+- Interpolated Precision: We observe varying precision values at different recall levels, indicating the system's ability to maintain precision as the recall increases however as recall largely increases, precision drops off indicating the system trades precision for recall
+  
 ### Optimizations
 
 Initially, we implemented our IR system using the tf-idf weighting system. For comparison we implemented this Lucene version and found it seemed to produce more accurate results without significantly impacting the runtime. To improve the quality of results, we used port stemming which we found improved our trec_eval scores in every measure in the produced report.
