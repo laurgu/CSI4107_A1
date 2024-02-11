@@ -83,4 +83,4 @@ The index is created using Lucene's "Index Writer". This index is written to a f
 
 ### Optimizations
 
-Initially, we implemented our IR system using the tf-idf weighting system. For comparison we implemented this Lucene version and found it seemed to produce more accurate results without significantly impacting the runtime.
+Initially, we implemented our IR system using the tf-idf weighting system. For comparison we implemented this Lucene version and found it produced more accurate results while maintaining a quick runtime so we deicded to move forward with the Lucene system.
