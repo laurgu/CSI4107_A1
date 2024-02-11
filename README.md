@@ -28,13 +28,7 @@ This project is an infomation retrieval system built using Apache Lucene.
    git clone https://github.com/IshanPhadte776/CSI4107.git
    ```
 
-2. **Navigate to the project directory:**
-
-   ```bash
-   cd A1-lucene
-   ```
-
-3. **Build the project using gradle wrapper:**
+2. **Build the project using gradle wrapper:**
 
    ```bash
    ./gradlew build
@@ -42,7 +36,7 @@ This project is an infomation retrieval system built using Apache Lucene.
 
    **_Or using gradle if installed:_** `gradle build`
 
-4. **Build the index:**
+3. **Build the index:**
 
    ```bash
    ./gradlew runLuceneIndex
@@ -50,7 +44,7 @@ This project is an infomation retrieval system built using Apache Lucene.
 
    **_Or if gradle installed:_** `gradle runLuceneIndex`
 
-5. **Run the the search function using gradle wrapper:**
+4. **Run the the search function using gradle wrapper:**
 
    ```bash
    ./gradlew run
@@ -58,7 +52,7 @@ This project is an infomation retrieval system built using Apache Lucene.
 
    **_Or using gradle if installed:_** `gradle run`
 
-6. **To view results, navigate to app directory then open the Results.txt file:**
+5. **To view results, navigate to app directory then open the Results.txt file:**
 
    ```bash
    cd app
