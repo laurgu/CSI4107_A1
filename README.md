@@ -13,7 +13,7 @@ This project is an infomation retrieval system built using Apache Lucene.
 **Division of Work:**
 
 - Ishan Phadte: Part 1 & Part 2
-- Lauren Gu: Part 3
+- Lauren Gu: Part 3 and Apache Lucene Implementation
 - Angus Leung: Part 2
 
 ## Prerequisites
@@ -21,6 +21,10 @@ This project is an infomation retrieval system built using Apache Lucene.
 - Java Development Kit (JDK)
 
 ## Instructions
+
+Final Code can be found at https://github.com/laurgu/CSI4107_A1 
+
+Initial Fork from https://github.com/IshanPhadte776/CSI4107 
 
 1. **Clone the repository:**
 
@@ -95,3 +99,8 @@ A Dictionary was used for the inverted index because we needed a key value data 
 ### Sample of 100 Tokens 
 
 ['nation', 'governors', 'appealed', 'whitehouse', 'sunday', 'relief', '163', 'federal', 'rules', 'regulations', 'andheard', 'former', 'governor', 'call', 'constitutional', 'convention', 'torestore', 'states', 'rights', 'new', 'hampshire', 'gov', 'john', 'h', 'sununu', 'opening', 'nationalgovernors', 'association', 'winter', 'meeting', 'said', 'time', 'hascome', 'press', 'new', 'division', 'authority', 'statesand', 'washington', 'erosion', 'fundamental', 'balance', 'struck200', 'years', 'ago', 'philadelphia', 'sununu', 'nga', 'chairman', 'said', 'ata', 'news', 'conference', 'gaveling', 'first', 'plenary', 'session', 'toorder', 'president', 'reagan', 'black', 'tie', 'dinner', 'governors', 'sundaynight', 'told', 'governors', 'envied', 'balanced', 'budgetrequirements', 'line', 'item', 'vetoes', 'many', 'possess', 'notone', 'would', 'put', 'mess', 'inwashington', 'budget', 'time', 'president', 'said', 'also', 'said', 'want', 'tie', 'successor', 'hands', 'butexpressed', 'hope', 'next', 'president', 'would', 'continue', 'tradition', 'ofinviting', 'governors', 'white']
+
+
+### Results
+
+For some queries, fewer than 1000 queries were provided as only the provided queries were deemed relevant
