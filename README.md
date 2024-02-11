@@ -22,9 +22,9 @@ This project is an infomation retrieval system built using Apache Lucene.
 
 ## Instructions
 
-Final Code can be found at https://github.com/laurgu/CSI4107_A1 
+Final Code can be found at https://github.com/laurgu/CSI4107_A1
 
-Initial Fork from https://github.com/IshanPhadte776/CSI4107 
+Initial Fork from https://github.com/IshanPhadte776/CSI4107
 
 1. **Clone the repository:**
 
@@ -70,7 +70,7 @@ Initial Fork from https://github.com/IshanPhadte776/CSI4107
 
 1. **Jsoup Parsing:** The files in the coll folder are read using Jsoup which allows ill-formatted xml files to still be parsed.
 
-2. **Document Extraction:** The seperate documents in each file are extracted by identifying \<DOC> tags. The \<DOCNO> and \<TEXT> of each document are extracted. <TEXT> is converted to lowercase to allow stopwords to be properly removed in the following section. 
+2. **Document Extraction:** The seperate documents in each file are extracted by identifying \<DOC> tags. The \<DOCNO> and \<TEXT> of each document are extracted. <TEXT> is converted to lowercase to allow stopwords to be properly removed in the following section.
 
 3. **Preprocessing:** The documents are preprocessed using a custom analyzer that extends the analyzer class provided by Lucene.
    It tokenizes words and removes stopwords.
@@ -89,17 +89,33 @@ The index is created using Lucene's "Index Writer". This index is written to a f
 
 Initially, we implemented our IR system using the tf-idf weighting system. For comparison we implemented this Lucene version and found it seemed to produce more accurate results without significantly impacting the runtime.
 
-### Data Structures 
+### Data Structures
 
-A Set was used for stops words because each stop word is unique and order isn't required
+Several data structures were used to organize data in our project.
 
-A Dictionary was used for the inverted index because we needed a key value data structure and a dictionary fits the description 
+In LuceneIndex.java:
 
+- `HashMap<String, String> docData`: used to store the docId and corresponding text of all documents
+- `HashMap<String, String> allDocData`: used to accumulate the docData from all XML documents in the coll folder
 
-### Sample of 100 Tokens 
+In CustomeAnalyzer.java:
 
-['nation', 'governors', 'appealed', 'whitehouse', 'sunday', 'relief', '163', 'federal', 'rules', 'regulations', 'andheard', 'former', 'governor', 'call', 'constitutional', 'convention', 'torestore', 'states', 'rights', 'new', 'hampshire', 'gov', 'john', 'h', 'sununu', 'opening', 'nationalgovernors', 'association', 'winter', 'meeting', 'said', 'time', 'hascome', 'press', 'new', 'division', 'authority', 'statesand', 'washington', 'erosion', 'fundamental', 'balance', 'struck200', 'years', 'ago', 'philadelphia', 'sununu', 'nga', 'chairman', 'said', 'ata', 'news', 'conference', 'gaveling', 'first', 'plenary', 'session', 'toorder', 'president', 'reagan', 'black', 'tie', 'dinner', 'governors', 'sundaynight', 'told', 'governors', 'envied', 'balanced', 'budgetrequirements', 'line', 'item', 'vetoes', 'many', 'possess', 'notone', 'would', 'put', 'mess', 'inwashington', 'budget', 'time', 'president', 'said', 'also', 'said', 'want', 'tie', 'successor', 'hands', 'butexpressed', 'hope', 'next', 'president', 'would', 'continue', 'tradition', 'ofinviting', 'governors', 'white']
+- `HashSet<String> customStopWords`: used to store custom stop words loaded from Stopwords.txt
 
+In App.java:
+
+- `ArrayList<String> allResults`: used to store the results of the queries in a list
+- `CustomAnalyzer customAnalyzer`: an instance of the CustomAnalyzer class which is used for creating query parser with customized preprocessing. The query parser is used for parsing the query string and generating Lucene queries based on the string.
+
+### Sample of 100 Tokens
+
+Lucene create a folder `CSI4107_A1\app\index_dir` for it's index that contains he inverted index structure, which includes information about terms, their positions, and other metadata. These files are in binary and other Lucene specfic file formats. It can be interpreted using a software called Luke to view the actual terms in the index. Below is a preview of the tokens in the index, displayed in Luke.
+
+![alt text](./Luke_SC_1.png)
+
+![alt text](./Luke_SC_2.png)
+
+![alt text](./Luke_SC_3.png)
 
 ### Results
 

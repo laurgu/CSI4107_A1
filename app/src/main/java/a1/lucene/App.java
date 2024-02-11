@@ -48,6 +48,8 @@ public class App {
         TopDocs topDocs = searcher.search(query, 1000);
         ScoreDoc[] scoreDocs = topDocs.scoreDocs;
 
+        System.out.println("STRING: " + sanitizedQueryString);
+
         // Print query number and number of results
 
         int counter = 1;
@@ -61,18 +63,19 @@ public class App {
 
             // Create result string and add to the results list
             String result = queryNum + " Q0 " + docIdString + " " + counter + " " + score + " " + "run_name\n";
-            System.out.println(result);
             counter++;
             allResults.add(result);
         }
+
+        System.out.println("Query: " + queryNum + "    Results: " + scoreDocs.length);
     }
 
     private static String sanitizeQueryString(String queryString) {
+
         String regex = "[-+|!{}\\[\\]^\"~*?:\\\\/]";
         // Replace special characters with a space
-        String sanitizedQueryString = queryString.replaceAll(regex, " ");
+        String sanitizedQueryString = queryString.toLowerCase().replaceAll(regex, " ");
 
-        System.out.println(sanitizedQueryString);
         return sanitizedQueryString;
     }
 

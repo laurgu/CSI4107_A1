@@ -49,7 +49,7 @@ public class LuceneIndex {
             // Extract the docId and text for each document and add them to the hashmap
             for (Element docElement : docList) {
                 String docId = docElement.getElementsByTag("docno").text().trim();
-                String text = docElement.getElementsByTag("text").text().trim();
+                String text = docElement.getElementsByTag("text").text().trim().toLowerCase();
                 docData.put(docId, text);
             }
 
