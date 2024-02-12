@@ -110,6 +110,42 @@ public class App {
         return queries;
     }
 
+    // Function reads queries with description from file and puts them into a list
+    private static ArrayList<String> getQueriesWithDesc() {
+        ArrayList<String> descriptions = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader("./Queries_Raw.txt"))) {
+            String line;
+            StringBuilder descBuilder = new StringBuilder();
+
+            while ((line = br.readLine()) != null) {
+                if (line.contains("<title>")) {
+                    // Start building the description string
+                    descBuilder = new StringBuilder();
+                    descBuilder.append(line.trim().replace("<title>", ""));
+                    continue;
+                }
+
+                if (line.contains("<desc>")) {
+                    descBuilder.append(line.trim().replace("<desc>", ""));
+                }
+
+                if (line.contains("<narr>")) {
+                    // Add the completed description string to the list
+                    descriptions.add(descBuilder.toString());
+                    continue;
+                }
+
+                // Append line to the description string
+                descBuilder.append(line.trim());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return descriptions;
+    }
+
     // Main method to run the querrying
     public static void main(String[] args) throws IOException, ParseException {
         // Open the Lucene index
@@ -119,7 +155,7 @@ public class App {
         CustomAnalyzer customAnalyzer = new CustomAnalyzer();
 
         // Read queries from file
-        ArrayList<String> queries = getQueries();
+        ArrayList<String> queries = getQueriesWithDesc();
 
         // List to store all results
         ArrayList<String> allResults = new ArrayList<>();

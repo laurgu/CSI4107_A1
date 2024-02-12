@@ -117,7 +117,7 @@ In totaly the vocabulary had 185530 terms.
 
 ### Results
 
-Below are screenshots of our first 10 results for queries 1 and 25.
+Below are screenshots of our first 10 results for queries 1 and 25 using the titles of the queries only.
 
 ![alt text](./Q1_SC.png)
 
@@ -139,18 +139,30 @@ _Query 1: Expected Results_
 
 _Query 25: Expected Results_
 
-We evaluated the performance of our system using trev_eval and expected search results document provided. Below are screenshots of our results.
+We used trec_eval to test how our system ran using just the title and the title + description as querires. Below are screenshots of our results.
 
 ![alt text](./Trec_Eval_SC.png)
 
-Based on the trec_eval report, we conclude:
-- Mean Average Precision (MAP): We achieved a 0.2998/1 which could be improved with future fine tuning of the system
-- Reciprocal Rank: We achieved a 0.5813/1 which is decent and indicates relatively efficient retrieval of documents
-- Precision at various cutoffs (P_5, P_10, P_20, etc.): We notice our measures are decent with fewer documents but drop when the cutoff increases 
-- R-Precision: We achieved a 0.2982/1 which is low and indicates the system struggled to indentify relevant documents
-- Binary Preference: We achieved a bpref score of 0.3397/1.0, indicating a reasonable ability of our system to rank relevant documents higher than non-relevant ones
-- Interpolated Precision: We observe varying precision values at different recall levels, indicating the system's ability to maintain precision as the recall increases however as recall largely increases, precision drops off indicating the system trades precision for recall
-  
+_Results using just title for query_
+
+![alt text](./Trec_Eval_SC2.png)
+
+_Results using title and description for query_
+
+### Analysis
+
+Using the two trec_eval reports, conclude the following:
+
+1. **MAP improvement by including description:** we notice including the description in the query slightly imrpoves the mean average precision. This is expected as the desciption provides more detail for the IR system to base its search off of. Titles can be very brief, some only two word, so the additional context help the IR system make a better informed search.
+
+2. **Number of Relevant Documents:** we notice including the description in the query increased the number of relevant documents (num_rel_ret). This indicates icluding the description provides more material for the IR system leading to a borader retrieval of relevant documents.
+
+3. **Precision and Recall:** including the descriptions increases the precision and recall scores of the IR system. Similar to 1, this makes sense since the expanded query provicdes more context for the IR system to retrieve more relevant results.
+
+4. **Reciprocal Rank:** we notice including the description in the query increases the reiprocal rank indicating relevant documents are retrieved faster or earlier.
+
+In general, from this comparison, we conclude that including the description had a positive effect on the accuracy of the IR system and indicates that more descriptive queries generally produce more relevant and accurate results.
+
 ### Optimizations
 
 Initially, we implemented our IR system using the tf-idf weighting system. For comparison we implemented this Lucene version and found it seemed to produce more accurate results without significantly impacting the runtime. To improve the quality of results, we used port stemming which we found improved our trec_eval scores in every measure in the produced report.
