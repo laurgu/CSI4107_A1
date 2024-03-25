@@ -1,4 +1,5 @@
 #Uses the USE model via Tensorflow
+#This works but takes 4 hours to run for 1 query
 #Run this code
 
 #All Pip installs
@@ -6,7 +7,7 @@
 # pip install numpy
 # pip install tensorflow
 # pip install tensorflow-hub
-
+# pip install tensorflow-gpu
 
 import os
 import re
@@ -20,6 +21,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
+import multiprocessing
 
 
 #Neural Internet Retrival Models 
@@ -124,25 +126,43 @@ def encode_embeddings(text):
     return embeddings.numpy()[0]
 
 # Retrieves and ranks documents using Universal Sentence Encoder
+# def retrieve_and_rank_documents_with_USE(query, documents):
+#     query_embedding = encode_embeddings(query)
+#     document_embeddings = {}
+#     for doc_id, doc_data in documents.items():
+#         document_embedding = encode_embeddings(doc_data['TEXT'])
+#         document_embeddings[doc_id] = document_embedding
+    
+#     # Compute cosine similarity for each document
+#     similarity_scores = {}
+#     for doc_id, document_embedding in document_embeddings.items():
+#         similarity_scores[doc_id] = cosine_similarity([query_embedding], [document_embedding])[0][0]
+    
+#     # Rank documents based on similarity scores
+#     ranked_documents = sorted(similarity_scores.items(), key=lambda x: x[1], reverse=True)
+    
+#     return ranked_documents
+
+def compute_similarity(documents, query_embedding):
+    similarity_scores = {}
+    for doc_id, document_embedding in documents.items():
+        similarity_scores[doc_id] = cosine_similarity([query_embedding], [document_embedding])[0][0]
+    return similarity_scores
+
 def retrieve_and_rank_documents_with_USE(query, documents):
     query_embedding = encode_embeddings(query)
-    document_embeddings = {}
-    for doc_id, doc_data in documents.items():
-        document_embedding = encode_embeddings(doc_data['TEXT'])
-        document_embeddings[doc_id] = document_embedding
+    document_embeddings = {doc_id: encode_embeddings(doc_data['TEXT']) for doc_id, doc_data in documents.items()}
     
-    # Compute cosine similarity for each document
-    similarity_scores = {}
-    for doc_id, document_embedding in document_embeddings.items():
-        similarity_scores[doc_id] = cosine_similarity([query_embedding], [document_embedding])[0][0]
+    with multiprocessing.Pool() as pool:
+        results = pool.starmap(compute_similarity, [(document_embeddings, query_embedding)])
     
-    # Rank documents based on similarity scores
+    similarity_scores = results[0]  # Extract the result from the list of results
+    
     ranked_documents = sorted(similarity_scores.items(), key=lambda x: x[1], reverse=True)
-    
     return ranked_documents
 
 # Example usage
-folder_path = "coll"  # Path to the folder containing multiple files
+folder_path = "minicoll"  # Path to the folder containing multiple files
 documents = read_documents(folder_path)
 
 # Retrieval and ranking based on TF-IDF
