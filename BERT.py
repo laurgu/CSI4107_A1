@@ -7,6 +7,8 @@ import nltk
 import torch
 import time
 from transformers import BertTokenizer, BertModel
+#from transformers import TinyBertTokenizer, TinyBertModel
+from transformers import DistilBertTokenizer, DistilBertModel
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
@@ -26,8 +28,14 @@ import numpy as np
 #P@10 or Precision at 10 means - Measures Precision amongest the top 10 documents, providing quality of search amongst the top of the search
 
 # Load BERT tokenizer and model
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-model = BertModel.from_pretrained('bert-base-uncased')
+# tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+# model = BertModel.from_pretrained('bert-base-uncased')
+
+# tokenizer = TinyBertTokenizer.from_pretrained('google/tinybert/tinybert-msl-6l-768')
+# model = TinyBertModel.from_pretrained('google/tinybert/tinybert-msl-6l-768')
+
+tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+model = DistilBertModel.from_pretrained('distilbert-base-uncased')
 
 def read_documents(folder_path):
     all_documents = {}
@@ -142,28 +150,54 @@ def retrieval_ranking(query, inverted_index):
     return ranked_documents
 
 #BERT Embeddings
-def encode_embeddings(text):
+# def encode_embeddings(text):
+#     # Tokenize input text
+#     tokens = tokenizer.tokenize(text)
+    
+#     # Convert tokens to input IDs
+#     input_ids = tokenizer.convert_tokens_to_ids(tokens)
+    
+#     # Add special tokens [CLS] and [SEP]
+#     input_ids = [tokenizer.cls_token_id] + input_ids + [tokenizer.sep_token_id]
+    
+#     # Convert input IDs to tensor
+#     input_tensor = torch.tensor(input_ids).unsqueeze(0)
+    
+#     # Get BERT embeddings
+#     with torch.no_grad():
+#         outputs = model(input_tensor)
+#         embeddings = outputs[0]  # BERT hidden states
+    
+#     # Average pooling of embeddings
+#     avg_embeddings = torch.mean(embeddings, dim=1).squeeze().numpy()
+    
+#     return avg_embeddings
+
+def encode_document_embedding(text):
     # Tokenize input text
     tokens = tokenizer.tokenize(text)
-    
+
     # Convert tokens to input IDs
     input_ids = tokenizer.convert_tokens_to_ids(tokens)
-    
+
     # Add special tokens [CLS] and [SEP]
     input_ids = [tokenizer.cls_token_id] + input_ids + [tokenizer.sep_token_id]
+
+    # Truncate or pad input to max length
+    input_ids = input_ids[:512]  # Truncate to max length 512 (default for TinyBERT)
     
     # Convert input IDs to tensor
     input_tensor = torch.tensor(input_ids).unsqueeze(0)
-    
-    # Get BERT embeddings
+
+    # Get TinyBERT embeddings
     with torch.no_grad():
         outputs = model(input_tensor)
-        embeddings = outputs[0]  # BERT hidden states
-    
+        embeddings = outputs[0]  # TinyBERT hidden states
+
     # Average pooling of embeddings
-    avg_embeddings = torch.mean(embeddings, dim=1).squeeze().numpy()
-    
-    return avg_embeddings
+    avg_embedding = torch.mean(embeddings, dim=1).squeeze().numpy()
+
+    return avg_embedding
 
 def encode_document_embedding(text):
     # Tokenize input text
