@@ -39,6 +39,7 @@ def parse_document(doc_content):
     doc_data['TEXT'] = re.search(r'<TEXT>(.*?)</TEXT>', doc_content, re.DOTALL).group(1).strip() if re.search(r'<TEXT>(.*?)</TEXT>', doc_content, re.DOTALL) else ""
     return doc_data
 
+"""
 # Example usage
 folder_path = "coll"  # Path to the folder containing multiple files
 documents = read_documents(folder_path)
@@ -52,3 +53,4 @@ print(f"Headline: {documents[docno]['HEAD']}")
 print(f"Dateline: {documents[docno]['DATELINE']}")
 print(f"Text: {documents[docno]['TEXT']}")
 
+"""
