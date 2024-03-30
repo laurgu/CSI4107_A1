@@ -1,309 +1,78 @@
-#Testing for BERT
-
 import os
 import re
-import nltk
-import torch
 import time
-from transformers import BertTokenizer, BertModel
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-from nltk.stem import PorterStemmer
-import xml.etree.ElementTree as ET
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.feature_extraction.text import TfidfVectorizer
+import torch
 import numpy as np
-import json
+from transformers import BertTokenizer, BertModel
+from sklearn.metrics.pairwise import cosine_similarity
+from Parseing import preprocessTokenizeDoc, read_documents, expand_query, get_queries
 
-#BERT (Bidirectional Encoder Representations from Transformers)
-#Meaning can be found from the words before and after the word to analyze
-#Bidirectional meaning before and after a word 
-#Encoder meaning Encoders and Decoders 
-#Representations means it represents words in vectors and numbers in high dimensional spaces 
-#Uses the Transformers architecture meaning the prcossing is done in parallel meaning it captures the relationship between words
-
-# Load BERT tokenizer and model
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-model = BertModel.from_pretrained('bert-base-uncased')
-
-def read_documents(folder_path):
-    all_documents = {}
-    for filename in os.listdir(folder_path):
-        filepath = os.path.join(folder_path, filename)
-        if os.path.isfile(filepath):
-            documents = read_documents_from_file(filepath)
-            all_documents.update(documents)
-    return all_documents
-
-def read_documents_from_file(filepath):
-    documents = {}
-    with open(filepath, "r", encoding="utf-8") as file:
-        doc_contents = file.read()
-        doc_data = parse_documents(doc_contents)
-        documents.update(doc_data)
-    return documents
-
-def parse_documents(doc_contents):
-    documents = {}
-    doc_pattern = re.compile(r'<DOC>(.*?)</DOC>', re.DOTALL)
-    for match in doc_pattern.finditer(doc_contents):
-        doc_content = match.group(1).strip()
-        doc_data = parse_document(doc_content)
-        documents[doc_data['DOCNO']] = doc_data
-    return documents
-
-def parse_document(doc_content):
-    doc_data = {}
-    doc_data['DOCNO'] = re.search(r'<DOCNO>(.*?)</DOCNO>', doc_content, re.DOTALL).group(1).strip()
-    #doc_data['HEAD'] = re.search(r'<HEAD>(.*?)</HEAD>', doc_content, re.DOTALL).group(1).strip() if re.search(r'<HEAD>(.*?)</HEAD>', doc_content, re.DOTALL) else ""
-    #doc_data['DATELINE'] = re.search(r'<DATELINE>(.*?)</DATELINE>', doc_content, re.DOTALL).group(1).strip() if re.search(r'<DATELINE>(.*?)</DATELINE>', doc_content, re.DOTALL) else ""
-    doc_data['TEXT'] = re.search(r'<TEXT>(.*?)</TEXT>', doc_content, re.DOTALL).group(1).strip() if re.search(r'<TEXT>(.*?)</TEXT>', doc_content, re.DOTALL) else ""
-    return doc_data
-
-#Part 1 Preprocess Text
-def preprocess_text(text):
-    # Convert text to lowercase
-    text = text.lower()
-    
-    # Remove markup that is not part of the text
-    text = re.sub(r'<.*?>', '', text)
-    
-    # Tokenization using BERT tokenizer
-    tokens = tokenizer.tokenize(text)
-    
-    # Remove stopwords
-    stop_words = set(stopwords.words('english'))
-    tokens = [word for word in tokens if word not in stop_words]
-    
-
-    if not tokens:
-        tokens.append('empty')  # Placeholder token
-    
-    return tokens
-
-#Part 2 Inverted Index
-def build_inverted_index(documents):
-    inverted_index = {}
-    for doc_id, doc_data in documents.items():
-        text = doc_data['TEXT']
-        tokens = preprocess_text(text)  # Preprocess text
-        
-        # Track position of tokens in document
-        positions = {}
-        for position, token in enumerate(tokens):
-            if token not in positions:
-                positions[token] = {'doc_ids': [], 'positions': []}
-            positions[token]['doc_ids'].append(doc_id)
-            positions[token]['positions'].append(position)
-        
-        # Update inverted index
-        for token, token_info in positions.items():
-            if token not in inverted_index:
-                inverted_index[token] = {}
-            for i, doc_id in enumerate(token_info['doc_ids']):
-                if doc_id not in inverted_index[token]:
-                    inverted_index[token][doc_id] = []
-                inverted_index[token][doc_id].append(token_info['positions'][i])
-    
-    return inverted_index
-
-def build_inverted_index_saved(documents, file):
-    inverted_index = {}
-    
-    for doc_id, doc_data in documents.items():
-        text = doc_data['TEXT']
-        tokens = preprocess_text(text)  # Preprocess text
-        
-        # Track position of tokens in document
-        positions = {}
-        for position, token in enumerate(tokens):
-            if token not in positions:
-                positions[token] = {'doc_ids': [], 'positions': []}
-            positions[token]['doc_ids'].append(doc_id)
-            positions[token]['positions'].append(position)
-        
-        # Update inverted index
-        for token, token_info in positions.items():
-            if token not in inverted_index:
-                inverted_index[token] = {}
-            for i, doc_id in enumerate(token_info['doc_ids']):
-                if doc_id not in inverted_index[token]:
-                    inverted_index[token][doc_id] = []
-                inverted_index[token][doc_id].append(token_info['positions'][i])
-    
-    # Save inverted index to file
-    with open(file, 'w') as json_file:
-        json.dump(inverted_index, json_file, indent=2)
-
-
-#Retrieves all documents with a word  
-def retrieval_ranking(query, inverted_index):
-    relevant_documents = set()
-    query_terms = query.split()
-    
-    # Retrieve documents containing at least one query word
-    for term in query_terms:
-        if term in inverted_index:
-            relevant_documents.update(inverted_index[term])
-    
-    # Collect document texts
-    document_texts = [documents[doc_id]['TEXT'] for doc_id in relevant_documents]
-    
-    # Compute cosine similarity for each relevant document
-    tfidf_vectorizer = TfidfVectorizer()
-    document_tfidf = tfidf_vectorizer.fit_transform(document_texts)
-    query_tfidf = tfidf_vectorizer.transform([query])
-    similarity_scores = cosine_similarity(query_tfidf, document_tfidf)[0]
-    
-    # Rank documents based on similarity scores
-    ranked_documents = sorted(zip(relevant_documents, similarity_scores), key=lambda x: x[1], reverse=True)
-    
-    return ranked_documents
-
-
-
-def encode_embeddings(text):
-    # Tokenize input text
-    tokens = tokenizer.tokenize(text)
-    
-    # Convert tokens to input IDs
+def encode_embeddings(tokens, tokenizer, model):
+    tokens = tokens[:510]
     input_ids = tokenizer.convert_tokens_to_ids(tokens)
-    
-    # Add special tokens [CLS] and [SEP]
     input_ids = [tokenizer.cls_token_id] + input_ids + [tokenizer.sep_token_id]
-    
-    # Convert input IDs to tensor
+    input_ids = input_ids + [tokenizer.pad_token_id] * (512 - len(input_ids)) if len(input_ids) < 512 else input_ids[:512]
     input_tensor = torch.tensor(input_ids).unsqueeze(0)
     
-    # Get BERT embeddings
     with torch.no_grad():
         outputs = model(input_tensor)
-        embeddings = outputs[0]  # BERT hidden states
-    
-    # Average pooling of embeddings
+        embeddings = outputs[0]
     avg_embeddings = torch.mean(embeddings, dim=1).squeeze().numpy()
     
     return avg_embeddings
-    
-def retrieve_and_rank_documents_with_BERT(query, documents):
-    query_embedding = encode_embeddings(query)
-    document_embeddings = {}
-    for doc_id, doc_data in documents.items():
-        document_embedding = encode_embeddings(doc_data['TEXT'])
-        document_embeddings[doc_id] = document_embedding
-    
-    # Compute cosine similarity for each document
+
+def retrieve_and_rank_documents_with_BERT(q_embed, doc_embed, num_results):
     similarity_scores = {}
-    for doc_id, document_embedding in document_embeddings.items():
-        similarity_scores[doc_id] = cosine_similarity([query_embedding], [document_embedding])[0][0]
-    
-    # Rank documents based on similarity scores
-    ranked_documents = sorted(similarity_scores.items(), key=lambda x: x[1], reverse=True)
-    
+    for doc_id, document_embedding in doc_embed.items():
+        similarity_scores[doc_id] = cosine_similarity([q_embed], [document_embedding])[0][0]
+    ranked_documents = sorted(similarity_scores.items(), key=lambda x: x[1], reverse=True)[:num_results]
     return ranked_documents
 
+def embed_docs_queries(query_path, doc_path, tokenizer, model):
+    documents = read_documents(doc_path)
+    queries = get_queries(query_path)
 
-def get_queries(doc_path):
-    queries = []
-
-    try:
-        with open(doc_path, 'r') as file:
-            # Read each line from the file and add to the queries list
-            for line in file:
-                queries.append(line.strip())
-
-        return queries
-    except IOError as e:
-        # Handle file reading error (e.g., file not found)
-        print("Error reading file:", e)
-
-    return queries
+    document_embeddings = {}
+    for doc_id, doc_data in documents.items():
+        processed_doc = preprocessTokenizeDoc(doc_data['TEXT'])
+        document_embedding = encode_embeddings(processed_doc, tokenizer, model)
+        document_embeddings[doc_id] = document_embedding
+    
+    query_embeddings = {}
+    for i, query in enumerate(queries, start=1):
+        processed_query = preprocessTokenizeDoc(expand_query(query))
+        query_embed = encode_embeddings(processed_query, tokenizer, model)
+        query_embeddings[i] = query_embed
+    
+    np.save('document_embeddings.npy', document_embeddings)
+    np.save('query_embeddings.npy', query_embeddings)
 
 def main():
-    folder_path = "coll"
-    documents = read_documents(folder_path)
-    inverted_index = {}
+    startTime = time.time()
+    
+    print("Creating model and tokenizer...")
+    tokenizer = BertTokenizer.from_pretrained('prajjwal1/bert-tiny')
+    model = BertModel.from_pretrained('prajjwal1/bert-tiny', ignore_mismatched_sizes=True)
 
-    # Call preprocess_text and build_inverted_index functions
-    for doc_id, doc_data in documents.items():
-        # Preprocess text
-        text = doc_data['TEXT']
-        tokens = preprocess_text(text)
+    if not os.path.exists('document_embeddings.npy') and not os.path.exists('query_embeddings.npy'):
+        print("No existing embeddings found. Creating embeddings...")
+        embed_docs_queries('Queries.txt', 'coll', tokenizer, model) 
 
-        # Update inverted index
-        for token in tokens:
-            if token not in inverted_index:
-                inverted_index[token] = []
-            inverted_index[token].append(doc_id)
+    print("Loading embeddings...")
+    document_embeddings = np.load('document_embeddings.npy', allow_pickle=True).item()
+    query_embeddings = np.load('query_embeddings.npy', allow_pickle=True).item()
 
-    build_inverted_index_saved(documents, "BERT_index.json")
-    queries = get_queries("CSI4107_A1/app/Queries.txt")
+    print("Calculating and saving results...")
+    with open('BERT_results.txt', 'w') as file:
+        for query_id, query_embed in query_embeddings.items():
+            relevant_documents = retrieve_and_rank_documents_with_BERT(query_embed, document_embeddings, tokenizer, model)
+            for rank, (docno, cossim) in enumerate(relevant_documents, start=1):
+                line = f"{query_id} Q0 {docno} {rank} {cossim} run_name"
+                file.write(line + '\n')
 
-    results = open('BERT_results.txt', 'w')
-
-    query_num = 0
-
-    for query in queries:
-        print(f"Processing Query {query_num + 1}: {query}")
-
-        relevant_documents = retrieve_and_rank_documents_with_BERT(query, documents)
-
-        counter = 0
-        for doc_id, score in relevant_documents:
-            results.write(f"{query_num} Q0 {doc_id} {counter} {score} run_name\n")
-            counter += 1
-
-        query_num += 1
-
-    print("Processing complete!")
+    endTime = time.time()
+    runTime = endTime - startTime 
+    print(str(runTime), "seconds taken")
 
 if __name__ == "__main__":
     main()
-
-
-# # Example usage
-# folder_path = "minicoll"  # Path to the folder containing multiple files
-# documents = read_documents(folder_path)
-
-# print(len(documents))
-
-# inverted_index = {}
-# query = "Coping with overcrowded prisons"
-
-# # Example usage
-# folder_path = "minicoll"  # Path to the folder containing multiple files
-# documents = read_documents(folder_path)
-
-
-# inverted_index = {}
-
-# # Call preprocess_text and build_inverted_index functions
-# for doc_id, doc_data in documents.items():
-#     # Preprocess text
-#     text = doc_data['TEXT']
-#     tokens = preprocess_text(text)
-
-#     # Update inverted index
-#     for token in tokens:
-#         if token not in inverted_index:
-#             inverted_index[token] = []
-#         inverted_index[token].append(doc_id)
-
-
-# # Build inverted index with positions
-# inverted_index_with_positions = build_inverted_index(documents)
-
-
-# relevantDocuments = retrieval_ranking("Coping with overcrowded prisons",inverted_index_with_positions)
-
-
-# print("Q0\tDocId\tCosineSimilarity\tRank\t", "run_name")
-# for rank, (doc_id, score) in enumerate(relevantDocuments, start=1):
-#     print(f"Q0\t{doc_id}\t{score}\t{rank}\t{'run_name'}")
-
-# relevant_documents = retrieve_and_rank_documents_with_BERT(query, documents)
-
-# # Print results
-# print("Q0\tDocId\tCosineSimilarity\tRank\t", "run_name")
-# for rank, (doc_id, score) in enumerate(relevant_documents, start=1):
-#     print(f"Q0\t{doc_id}\t{score}\t{rank}\t{'run_name'}")

@@ -6,7 +6,7 @@ import re
 #nltk.download('punkt')
 #nltk.download('stopwords')
 
-from nltk.corpus import stopwords
+from nltk.corpus import stopwords, wordnet
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
 
@@ -40,8 +40,8 @@ def parse_documents(doc_contents):
 def parse_document(doc_content):
     doc_data = {}
     doc_data['DOCNO'] = re.search(r'<DOCNO>(.*?)</DOCNO>', doc_content, re.DOTALL).group(1).strip()
-    doc_data['HEAD'] = re.search(r'<HEAD>(.*?)</HEAD>', doc_content, re.DOTALL).group(1).strip() if re.search(r'<HEAD>(.*?)</HEAD>', doc_content, re.DOTALL) else ""
-    doc_data['DATELINE'] = re.search(r'<DATELINE>(.*?)</DATELINE>', doc_content, re.DOTALL).group(1).strip() if re.search(r'<DATELINE>(.*?)</DATELINE>', doc_content, re.DOTALL) else ""
+    # doc_data['HEAD'] = re.search(r'<HEAD>(.*?)</HEAD>', doc_content, re.DOTALL).group(1).strip() if re.search(r'<HEAD>(.*?)</HEAD>', doc_content, re.DOTALL) else ""
+    # doc_data['DATELINE'] = re.search(r'<DATELINE>(.*?)</DATELINE>', doc_content, re.DOTALL).group(1).strip() if re.search(r'<DATELINE>(.*?)</DATELINE>', doc_content, re.DOTALL) else ""
     doc_data['TEXT'] = re.search(r'<TEXT>(.*?)</TEXT>', doc_content, re.DOTALL).group(1).strip() if re.search(r'<TEXT>(.*?)</TEXT>', doc_content, re.DOTALL) else ""
     return doc_data
 
@@ -53,19 +53,33 @@ def get_queries(filepath):
     return queries
 
 def preprocessTokenizeDoc(text):
+    # Set of English stopwords
     stopwordsSet = set(stopwords.words('english'))
+    
+    # Initialize Porter Stemmer
+    stemmer = PorterStemmer()
 
+    # Convert text to lowercase
     text = text.lower()
     
+    # Remove punctuation
     text = re.sub(r'[^\w\s]', '', text)
     
+    # Tokenize text
     text = word_tokenize(text)
     
-    tokens = []
-    
-    for token in text:
-        if token not in stopwordsSet:
-            tokens.append(token)
-    
+    # Apply stemming and remove stopwords
+    tokens = [stemmer.stem(token) for token in text if token not in stopwordsSet]
     
     return tokens
+
+def expand_query(query):
+    expanded_query = []
+    for term in query.split():
+        # Find synonyms for each term using WordNet
+        synonyms = set()
+        for synset in wordnet.synsets(term):
+            for lemma in synset.lemmas():
+                synonyms.add(lemma.name())
+        expanded_query.extend(synonyms)
+    return ' '.join(expanded_query)

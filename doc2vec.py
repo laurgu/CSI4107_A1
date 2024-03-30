@@ -17,7 +17,7 @@ import time
 from sklearn.metrics.pairwise import cosine_similarity
 def main():
     print("Importing docs...")
-    docs = read_documents('coll')   # Stores a dict with docno as key and has docno, head, dateline, text
+    docs = read_documents('coll') 
 
     # Tokenize and preprocess docs
     print("Preprocessing and tokenizing docs...")
@@ -28,22 +28,26 @@ def main():
     print("Number of docs:", len(taggedDocs))
 
     # Create model
-    # print("Training model...")
-    # model = Doc2Vec(vector_size=100, epochs=10)
-    # model.build_vocab(taggedDocs)
-    # model.train(taggedDocs, total_examples=model.corpus_count, epochs=model.epochs)
-    # model.save("doc2vec_model")
+    print("Training model...")
+    model = Doc2Vec(vector_size=200, epochs=10)
+    model.build_vocab(taggedDocs)
+    model.train(taggedDocs, total_examples=model.corpus_count, epochs=model.epochs)
+    model.save("doc2vec_model")
 
     # Load pre-trained model
-    print("Loading pre-trained model...")
-    model = Doc2Vec.load("doc2vec_model")
+    # print("Loading pre-trained model...")
+    # model = Doc2Vec.load("doc2vec_model")
 
     # Compute document vectors
     print("Computing document vectors...")
     doc_vecs = {}
+    counter = 1
     for docno, doc in docs.items():
+        if counter < 10:
+            print(doc['TEXT'])
         docVector = model.infer_vector(preprocessTokenizeDoc(doc['TEXT']))
         doc_vecs[docno] = docVector
+        counter += 1
 
     # Compute query vectors
     print("Computing query vectors...")
