@@ -2,7 +2,7 @@
 
 This project uses BERT and doc2vec models to create information retrieval systems.
 
-# Group Information
+## Group Information
 
 **Students:**
 
