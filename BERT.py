@@ -22,8 +22,8 @@ import numpy as np
 #Uses the Transformers architecture meaning the prcossing is done in parallel meaning it captures the relationship between words
 
 # Load BERT tokenizer and model
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-model = BertModel.from_pretrained('bert-base-uncased')
+tokenizer = BertTokenizer.from_pretrained('prajjwal1/bert-tiny')
+model = BertModel.from_pretrained('prajjwal1/bert-tiny', ignore_mismatched_sizes=True)
 
 def read_documents(folder_path):
     all_documents = {}
@@ -143,6 +143,7 @@ def retrieval_ranking(query, inverted_index):
 def encode_embeddings(text):
     # Tokenize input text
     tokens = tokenizer.tokenize(text)
+    tokens = tokens[:510]
     
     # Convert tokens to input IDs
     input_ids = tokenizer.convert_tokens_to_ids(tokens)
@@ -150,6 +151,11 @@ def encode_embeddings(text):
     # Add special tokens [CLS] and [SEP]
     input_ids = [tokenizer.cls_token_id] + input_ids + [tokenizer.sep_token_id]
     
+    if len(input_ids) < 512:
+        input_ids = input_ids + [tokenizer.pad_token_id] * (512 - len(input_ids))
+    else:
+        input_ids = input_ids[:512]
+        
     # Convert input IDs to tensor
     input_tensor = torch.tensor(input_ids).unsqueeze(0)
     
@@ -180,8 +186,10 @@ def retrieve_and_rank_documents_with_BERT(query, documents):
     
     return ranked_documents
 
+startTime = time.time()
+
 # Example usage
-folder_path = "minicoll"  # Path to the folder containing multiple files
+folder_path = "coll"  # Path to the folder containing multiple files
 documents = read_documents(folder_path)
 
 print(len(documents))
@@ -190,7 +198,7 @@ inverted_index = {}
 query = "Coping with overcrowded prisons"
 
 # Example usage
-folder_path = "minicoll"  # Path to the folder containing multiple files
+folder_path = "coll"  # Path to the folder containing multiple files
 documents = read_documents(folder_path)
 
 
@@ -225,3 +233,23 @@ relevant_documents = retrieve_and_rank_documents_with_BERT(query, documents)
 print("Q0\tDocId\tCosineSimilarity\tRank\t", "run_name")
 for rank, (doc_id, score) in enumerate(relevant_documents, start=1):
     print(f"Q0\t{doc_id}\t{score}\t{rank}\t{'run_name'}")
+    
+
+# Print results and save to file
+with open('BERT_results.txt', 'w') as file:
+    
+    line = "topic_id\tQ0\tdocno\trank\tscore\ttag"
+    print(line)
+    file.write(line+"\n")
+
+    rank = 1
+    for docno, cossim in relevant_documents:
+        line = "1\tQ0\t"+docno+"\t"+str(rank)+"\t"+str(cossim)+"\t"+"run_name"
+        print(line)
+        rank = rank + 1
+        
+        file.write(line+"\n")
+        
+endTime = time.time()
+runTime = endTime - startTime 
+print(str(runTime), "seconds taken")
