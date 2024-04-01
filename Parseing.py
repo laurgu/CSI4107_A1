@@ -2,10 +2,10 @@
 #Parses the Profs documents
 import os
 import re
-#import nltk
-#nltk.download('punkt')
-#nltk.download('stopwords')
-
+import nltk
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
 from nltk.corpus import stopwords, wordnet
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
@@ -76,7 +76,6 @@ def preprocessTokenizeDoc(text):
 def expand_query(query):
     expanded_query = []
     for term in query.split():
-        # Find synonyms for each term using WordNet
         synonyms = set()
         for synset in wordnet.synsets(term):
             for lemma in synset.lemmas():

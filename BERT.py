@@ -54,7 +54,7 @@ def main():
     tokenizer = BertTokenizer.from_pretrained('prajjwal1/bert-tiny')
     model = BertModel.from_pretrained('prajjwal1/bert-tiny', ignore_mismatched_sizes=True)
 
-    if not os.path.exists('document_embeddings.npy') and not os.path.exists('query_embeddings.npy'):
+    if not os.path.exists('document_embeddings.npy') or not os.path.exists('query_embeddings.npy'):
         print("No existing embeddings found. Creating embeddings...")
         embed_docs_queries('Queries.txt', 'coll', tokenizer, model) 
 
