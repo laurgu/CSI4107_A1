@@ -65,7 +65,7 @@ def main():
     print("Calculating and saving results...")
     with open('BERT_results.txt', 'w') as file:
         for query_id, query_embed in query_embeddings.items():
-            relevant_documents = retrieve_and_rank_documents_with_BERT(query_embed, document_embeddings, tokenizer, model)
+            relevant_documents = retrieve_and_rank_documents_with_BERT(query_embed, document_embeddings, 1000)
             for rank, (docno, cossim) in enumerate(relevant_documents, start=1):
                 line = f"{query_id} Q0 {docno} {rank} {cossim} run_name"
                 file.write(line + '\n')
