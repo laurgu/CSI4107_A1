@@ -1,9 +1,6 @@
-doc2vec_model
 doc2vec_model.dv.vectors.npy
 doc2vec_model.syn1neg.npy
 doc2vec_model.wv.vectors.npy
 coll
-document_embeddings.npy
-query_embeddings.npy
-doc_vectors.json
-query_vecs.json
+bert_res
+doc2vec_res
