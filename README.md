@@ -1,7 +1,6 @@
 # Assignment 2
 
 This project uses BERT and doc2vec models to create information retrieval systems.
-EXPLANATION OF WHAT BOTH MODELS DO!!!
 
 ## Group Information
 
@@ -103,6 +102,58 @@ The model is trained using on the documents from the corpus where it learns to g
 
 To retrieve documents, Doc2Vec will use what it has learned during training to infer an embedding of a document and a query. We save the vector embeddings for the documents and queries so that subsequent runs do not have to recalculate these embeddings, reducing runtime. The cosine similarities between a query and the document infered vectors are calculated to determine relevant documents.
 
+## Data Structures
+
+### BERT
+
+1. **Lists**: lists are used many times to store things like "tokens", "input_ids", and the "attention_mask"
+
+2. **Dictionaries**: are used to store the document and query embeddings. The embeddings are mapped to their id; the docno for the documents and a number dictating query order for queries.
+
+3. **Numpy Array**: are used to store the embeddings into local files so they may be retrieved in subsequent runs. The numpy array allows for efficient storage and retrieval of large datasets.
+
+4. **Torch Tensor**: are used to handle input tensors and attention mask tensors during the encoding process.
+
+### Doc2Vec
+
+1. **Lists**: are used to store several things, like the tagged documents, and the list of queries to be excuted.
+
+2. **Dictionaries**: are used to store the vectors calculated for the documents and queries. The vectors are mapped to an id; the docno for the documents and a number dictating query order for queries.
+
+3. **File I/O**: json files are used to store the document and query vectors that are calculated
+
+## Optimizations
+
+### BERT
+
+Optimizations we used for BERT were mainly aimed towards reducing runtime as the runtime initially (4hrs per query) was so long that it was hard to test different variations. In order to reduce runtime, we used a tiny BERT model rather than the original BERT model as it is lighterweight and reduces the runtime. Additionally, we found that the longest part of the BERT runtime was creating the embeddings for the documents and tokens. Becuase we are working with a static set of documents and tokens, we decided to initally compute all the embeddings then save them locally so that future runs could simply load the embeddings rather than having to recalculate them.
+
+### Doc2Vec
+
+Similar to BERT, we also tried to reduce the runtime of Doc2Vec so it could be run numerous times without taking an unreasonable amount of time. We followed a similar approach by saving the model after it is trained once and saving the document and query vectors after they are calculated so subsequent runs could load in a pretrained model and use the precalculated vectors.
+
+In order to try to improve MAP, preceision, and recall scores, we tried changing the vector_size and epochs variables. We found that increasing either actually yielded worse results
+
 ## Results and Analysis
 
 To evaluate the performance of the models, we will use trec eval and we will compare runtimes.
+
+### BERT
+
+### Doc2Vec
+
+### Comparison to A1
+
+For A1, we implemented an IR system using Apache Lucene. Below are all three trec eval results.
+
+_Apache Lucene Trec Eval Results Screenshot_
+
+![Apache Lucene Trec Eval Screenshot](/imgs/Lucene_TrecEval.png)
+
+From the trec eval results, we observe that the Apache Lucene model far outperfroms both the BERT and Doc2Vec implementations of an IR system.
+
+We also compare the runtimes of the three models. Below is a table sumarrizing our findings:
+
+Again, we notive that the Apache Lucene outperforms BERT and Doc2Vec, having significantly shorter runtimes.
+
+From this, we conclude that
