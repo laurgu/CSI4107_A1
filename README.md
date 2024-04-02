@@ -88,10 +88,16 @@ To retrieve documents, we calculate the cossine similarity between the the embed
 
 To prepare documents and queries for retrieval with the BERT model, preprocessing removes punctuation and stopwords applies porter stemming, and converts text to lowercase. Text is then tokenized using nltk word_tokenize().
 
-The Doc2Vec model we use is declared as follows:
+The default Doc2Vec definition is:
 
 ```bash
-model = Doc2Vec(vector_size=100, epochs=10)
+model = Doc2Vec(window=10, alpha=0.01, workers=4)
+```
+
+The Doc2Vec model parameters we changed are:
+
+```bash
+model = Doc2Vec(window=10, alpha=0.01, workers=4)
 ```
 
 where the vector_size dictates the dimensionality of the output vectors for documents and queries, and epochs specifies the number of iterations over the corpus the model is to do during training. We save the model locally so that it does not need to be retrained each run in order to reduce runtime.
@@ -136,11 +142,78 @@ In order to try to improve MAP, preceision, and recall scores, we tried changing
 
 ## Results and Analysis
 
-To evaluate the performance of the models, we will use trec eval and we will compare runtimes.
+To evaluate the performance of the models, we will use trec eval and we will compare runtimes. Since runtimes may vary greatly depending on the hardware and what else is running on the computer at the time, we will take the average runtime of three runs.
 
 ### BERT
 
 ### Doc2Vec
+
+Unfortunately, we do not have screenshots of the Trec Eval scores where we initially varried the epochs and vector_size parameters of the model but we eventually devided the default values, epochs = 10, vector_size = 100, yielded the best results. A screenshot of a model using all default parameters is picrued below:
+
+_Default Doc2Vec Model Trec Eval Results_
+
+![Base Doc2Vec Trec Eval Screenshot](imgs/Doc2VecBase.png)
+
+Because the results of this model were very poor, we decided to try changing some other variables as well. The Trec Eval results of those experiments are below:
+
+_Doc2Vec model with window = 10 and all other parameters as default Trec Eval Results_
+
+![Doc2Vec model with window = 10 and all other parameters as default Screenshot](imgs/Doc2VecWindow10.png)
+
+_Doc2Vec model with window = 15 and all other parameters as default Trec Eval Results_
+
+![Doc2Vec model with window = 15 and all other parameters as default Screenshot](imgs/Doc2Vec_Window15.png)
+
+_Doc2Vec model with alpha = 0.01 and all other parameters as default Trec Eval Results_
+
+![Doc2Vec model with alpha = 0.01 and all other parameters as default Screenshot](imgs/Doc2VecA0.01.png)
+
+_Doc2Vec model with alpha = 0.01 and all other parameters as default Trec Eval Results_
+
+![Doc2Vec model with alpha = 0.001 and all other parameters as default Screenshot](imgs/Doc2VecA0.001.png)
+
+After trying the variations of Doc2Vec above, we concluded the best performing model used default parameters except for alpha = 0.01 and window = 10. The results of our final version of Doc2Vec are pictured below.
+
+![Doc2Vec model with alpha = 0.01, window = 10 and all other parameters as default Screenshot](imgs/Doc2Vec_TrecEval.png)
+
+Below is a table summarizing the MAP and P@10 scores of the different versions we tried:
+
+| Version                   | MAP    | P@10   |
+| ------------------------- | ------ | ------ |
+| Default Parameters        | 0.0033 | 0.0100 |
+| Window = 10               | 0.0048 | 0.0100 |
+| Window = 15               | 0.0011 | 0.0040 |
+| Alpha = 0.01              | 0.0056 | 0.0140 |
+| Alpha = 0.001             | 0.0021 | 0.0100 |
+| Alpha = 0.01, Window = 10 | 0.0082 | 0.0280 |
+
+---
+
+The top 10 results from queries 3 and 20 produced by this model are pictured below:
+
+_Top 10 Results of Query 3_
+
+![Top 10 Results of Query 3 Screenshot](imgs/Doc2Vec_Q3.png)
+
+_Top 10 Results of Query 20_
+
+![Top 10 Results of Query 20 Screenshot](imgs/Doc2Vec_Q20.png)
+
+---
+
+The average runtime for training the model and calculating the embeddings of three runs is shown below:
+$$ (1070.8643760681152s + 1107.1787784099579s + 1054.4542322158813s)/3 = 1077.4991288979848s$$
+
+The average runtime for retrieving and writing results of the three runs is shown below:
+$$ 1483.1126646995544s + 1421.1524877548218s + 1581.267713546753s)/3 = 1495.1776220003764s $$
+
+Because we save the model and embeddings after a run which are loaded into subsquent runs, when the model and embeddings do not need to be recalculated, it takes only a few seconds to load from file the trained model and the precalculted embeddings.
+
+---
+
+From the Trec Eval Results above, we observe that Doc2Vec has overall poor performance. The map score (mean average precision) is very low, at 0.0082, meaning the model struggled to retrieve relevant documents. Similarily, the Rprec (R precision) is low, at 0.0131, indicating that a various levels of recall, precision of the model is generally poor. The precision at K scores also reflect Doc2Vec's struggle to retrieve relevant documents. The precision at recall levels scores show a sharp drop off as recall increases, indicating that the system retrieves more and more irrelevant documents as recall increases.
+
+From the runtimes, we not that they are not especially long, with training and calculating vectors taking about 1077.4991288979848 seconds (about 18 minutes) while retriving and writing results takes about 1495.1776220003764 seconds (about 25 minutes)for a total time of about 2572.6767508983612 seconds (about 43 minutes).
 
 ### Comparison to A1
 
@@ -148,7 +221,9 @@ For A1, we implemented an IR system using Apache Lucene. Below are all three tre
 
 _Apache Lucene Trec Eval Results Screenshot_
 
-![Apache Lucene Trec Eval Screenshot](/imgs/Lucene_TrecEval.png)
+![Apache Lucene Trec Eval Screenshot](imgs/Lucene_TrecEval.png)
+
+![Doc2Vec Trec Eval Screenshot](imgs/Doc2Vec_TrecEval.png)
 
 From the trec eval results, we observe that the Apache Lucene model far outperfroms both the BERT and Doc2Vec implementations of an IR system.
 

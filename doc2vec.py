@@ -90,7 +90,6 @@ def main():
     # End timing
     end_time = time.time()
     print("Training + Calculate Vectors Runtime: ", (end_time-start_time), " seconds")
-    
     # Retrieve and write retrieval results
     print("Retrieving and writing results...")
     with open('doc2vec_results.txt', 'w') as file:
