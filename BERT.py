@@ -3,36 +3,28 @@ import re
 import time
 import torch
 import numpy as np
-from transformers import BertTokenizer, BertModel
+from transformers import DistilBertTokenizer, DistilBertModel
 from sklearn.metrics.pairwise import cosine_similarity
 from Parseing import preprocessTokenizeDoc, read_documents, get_queries
 
-# Function to encode embeddings for tokens
 def encode_embeddings(tokens, tokenizer, model):
-    # Truncate tokens to fit BERT's max input length (512 tokens)
-    tokens = tokens[:510]
-    # Convert tokens to input IDs
-    input_ids = tokenizer.convert_tokens_to_ids(tokens)
-    # Add special tokens for BERT input
-    input_ids = [tokenizer.cls_token_id] + input_ids + [tokenizer.sep_token_id]
-    # Pad input if necessary to reach max length
-    input_ids = input_ids + [tokenizer.pad_token_id] * (512 - len(input_ids)) if len(input_ids) < 512 else input_ids[:512]
-    
+    # Truncate tokens to fit DistilBERT's max input length (512 tokens)
+    tokens = tokens[:tokenizer.model_max_length - 2]  # Subtract 2 for special tokens [CLS] and [SEP]
+    # Tokenize input
+    input_ids = tokenizer.encode(tokens, add_special_tokens=True)
+    # Truncate or pad tokens
+    input_ids = input_ids[:tokenizer.model_max_length] if len(input_ids) > tokenizer.model_max_length else input_ids + [tokenizer.pad_token_id] * (tokenizer.model_max_length - len(input_ids))
     # Create attention mask
-    attention_mask = [1 if token_id != tokenizer.pad_token_id else 0 for token_id in input_ids]
-    
+    attention_mask = [1] * len(input_ids)
     # Convert inputs to tensors
     input_tensor = torch.tensor(input_ids).unsqueeze(0)
     attention_mask_tensor = torch.tensor(attention_mask).unsqueeze(0)
-    
-    # Compute embeddings using BERT model
+    # Compute embeddings using DistilBERT model
     with torch.no_grad():
         outputs = model(input_tensor, attention_mask=attention_mask_tensor)
         embeddings = outputs.last_hidden_state
-    
     # Average pooling of embeddings
     avg_embeddings = torch.mean(embeddings, dim=1).squeeze().numpy()
-    
     return avg_embeddings
 
 # Function to retrieve and rank documents based on query and document embeddings
@@ -77,9 +69,8 @@ def main():
     
     print("Creating model and tokenizer...")
     # Load BERT model and tokenizer
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    model = BertModel.from_pretrained('bert-base-uncased', ignore_mismatched_sizes=True)
-
+    tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+    model = DistilBertModel.from_pretrained('distilbert-base-uncased', ignore_mismatched_sizes=True)
     # Check if embeddings already exist, if not, create them
     if not os.path.exists('bert_res/document_embeddings.npy') or not os.path.exists('bert_res/query_embeddings.npy'):
         print("No existing embeddings found. Creating embeddings...")

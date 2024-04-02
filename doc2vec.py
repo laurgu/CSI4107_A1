@@ -39,10 +39,12 @@ def main():
 
         # Train Doc2Vec model
         print("Training model...")
-        model = Doc2Vec(window=10, alpha=0.001, workers=4)
+        model = Doc2Vec(window=10, alpha=0.01, workers=4)
         model.build_vocab(taggedDocs)
         model.train(taggedDocs, total_examples=model.corpus_count, epochs=model.epochs)
         
+        if not os.path.exists('doc2vec_res'):
+            os.makedirs('doc2vec_res')
         # Save trained model
         model.save('doc2vec_res/doc2vec_model')
 
