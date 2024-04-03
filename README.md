@@ -171,17 +171,7 @@ _Top 10 Results of Query 20_
 
 ![Top 10 Results of Query 20 Screenshot](imgs/tinyBERT_Q20.png)
 
----
-
-The average runtime to compute the document and query embeddings of three runs is shown below:
-
-$$ $$
-
-The average runtime to retrieve and write the results of three runs is shown below:
-
-$$ $$
-
-Note that because we save document and query embeddings locally, subsequent runs of the model only require loading in the pre calculated embedding which only takes a few seconds.
+From the Trec Eval scores above, we observe that overall Tiny BERT's performance is very poor. The MAP (mean average precision) score is very low, at 0.111, indicating the model struggled to retrieve relevant documents. Similarily, the R-Precision is also very low, at 0.0220. The P at K scores are consistently low at all values of K meaning that very few documents retrieved are relevant, even at high cut off points. Overall, all other measures have low values. We conclude our Tiny BERT implementation missed struggled to create meaningful embeddings of the documents and queries resulting in poor retrieval performance.
 
 ### Doc2Vec
 
@@ -272,8 +262,14 @@ _Apache Lucene Trec Eval Results Screenshot_
 
 ![Apache Lucene Trec Eval Screenshot](imgs/Lucene_TrecEval.png)
 
+_Tiny BERT Trec Eval Results Screenshot_
+
+![Apache Lucene Trec Eval Screenshot](imgs/tinyBERT.png)
+
+_Doc2Vec Trec Eval Results Screenshot_
+
 ![Doc2Vec Trec Eval Screenshot](imgs/Doc2Vec_TrecEval.png)
 
 From the trec eval results, we observe that the Apache Lucene model far outperfroms both the BERT and Doc2Vec implementations of an IR system. BERT performs marginally better than Doc2Vec but both models overall have poor performance.
 
-From this, we conclude that though
+From this, we conclude that though Doc2Vec and tiny BERT can be powerful models, we did not see success with them and found that Apache Lucene provided much better trec eval scores as well as a shorter runtime.
