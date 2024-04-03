@@ -88,19 +88,11 @@ To retrieve documents, we calculate the cossine similarity between the the embed
 
 To prepare documents and queries for retrieval with the BERT model, preprocessing removes punctuation and stopwords applies porter stemming, and converts text to lowercase. Text is then tokenized using nltk word_tokenize().
 
-The default Doc2Vec definition is:
-
-```bash
-model = Doc2Vec(window=10, alpha=0.01, workers=4)
-```
-
 The Doc2Vec model parameters we changed are:
 
 ```bash
 model = Doc2Vec(window=10, alpha=0.01, workers=4)
 ```
-
-where the vector_size dictates the dimensionality of the output vectors for documents and queries, and epochs specifies the number of iterations over the corpus the model is to do during training. We save the model locally so that it does not need to be retrained each run in order to reduce runtime.
 
 The model is trained using on the documents from the corpus where it learns to generate embeddings for documents and words so that similar documents have similar embeddings in vector space. While ideally, a model should learn on training data and be tested on seperate testing data, in this particular case, it was not possible to use different data for testing and training as we were only given one collection of documents. However, it is generally not acceptable to use the same data for testing and training as this will produce inflated positive retrieval results.
 
@@ -146,6 +138,51 @@ To evaluate the performance of the models, we will use trec eval and we will com
 
 ### BERT
 
+We tried several different variations of BERT. We do not have results for Roberta, a variant of BERT, because the runtime was very long. We let the model run for 8 hours before deciding it was not reasonable to use this model due to its intensive resource usage and long runtime. The other two models we explores are distilled-BERT and tiny-BERT. Distilled-BERT is a modle that compresses large BERT into a smaller, faster version while maintaining good performance. Tiny BERT is a compact version of BERT that uses fewer layers and hidden units as well as limiting other parameters to reduce runtime and resource requirements.
+
+The trec eval scores of both models are pictured below:
+
+_Distilled BERT Trec Eval Results_
+
+![Distilled BERT Trec Eval Screenshot](imgs/DistilledBERT.png)
+
+_Tiny BERT Trec Eval Results_
+
+![Tiny BERT Trec Eval Screenshot](imgs/tinyBERT.png)
+
+Below is a table summaizing the MAP and P@10 scores of both models:
+
+| Model          | MAP    | P@10   |
+| -------------- | ------ | ------ |
+| Distilled BERT | 0.0000 | 0.0000 |
+| Tiny BERT      | 0.0111 | 0.0360 |
+
+Based on the trec eval scores from above, we noticed that tiny BERT had superior performance. We decided to move forward with the Tiny BERT model.
+
+---
+
+Below are the top 10 results produced by Tiny BERT for queries 3 and 20.
+
+_Top 10 Results of Query 3_
+
+![Top 10 Results of Query 3 Screenshot](imgs/tinyBERT_Q3.png)
+
+_Top 10 Results of Query 20_
+
+![Top 10 Results of Query 20 Screenshot](imgs/tinyBERT_Q20.png)
+
+---
+
+The average runtime to compute the document and query embeddings of three runs is shown below:
+
+$$ $$
+
+The average runtime to retrieve and write the results of three runs is shown below:
+
+$$ $$
+
+Note that because we save document and query embeddings locally, subsequent runs of the model only require loading in the pre calculated embedding which only takes a few seconds.
+
 ### Doc2Vec
 
 Unfortunately, we do not have screenshots of the Trec Eval scores where we initially varried the epochs and vector_size parameters of the model but we eventually devided the default values, epochs = 10, vector_size = 100, yielded the best results. A screenshot of a model using all default parameters is picrued below:
@@ -154,7 +191,19 @@ _Default Doc2Vec Model Trec Eval Results_
 
 ![Base Doc2Vec Trec Eval Screenshot](imgs/Doc2VecBase.png)
 
-Because the results of this model were very poor, we decided to try changing some other variables as well. The Trec Eval results of those experiments are below:
+Because the results of this model were very poor, we decided to try changing some other variables as well. The parameters that we expirimented with are:
+
+- **epochs (default = 10):** specifies the nummber of iterations over the document collection the model does during training. Higher epoch means a model may more closely fit a dataset but if epoch is too high, overfitting may occur.
+
+- **vector size (default = 100):** specified the dimentionality of the output vector of the document/query embeddings. A larger vector size allows the model to capture more semantic information.
+
+- **window (default = 5):** specifies the maximum distance between the target word and the context words in a sentence use while training. A larger window size allows the model to capture mor contextural information.
+
+- **alpha (default = 0.025):** specifies the initial learning rate. A higher alpah means the model will learn faster as it takes longer to update weights while a lower alpha means the model makes more cautious updates to weighting.
+
+- **workers (default = 1):** specifies the number of threads used for training the model.
+
+The Trec Eval results of those experiments are below:
 
 _Doc2Vec model with window = 10 and all other parameters as default Trec Eval Results_
 
@@ -215,9 +264,9 @@ From the Trec Eval Results above, we observe that Doc2Vec has overall poor perfo
 
 From the runtimes, we not that they are not especially long, with training and calculating vectors taking about 1077.4991288979848 seconds (about 18 minutes) while retriving and writing results takes about 1495.1776220003764 seconds (about 25 minutes)for a total time of about 2572.6767508983612 seconds (about 43 minutes).
 
-### Comparison to A1
+### Comparison of Tiny BERT, Doc2Vec, and Apache Lucene
 
-For A1, we implemented an IR system using Apache Lucene. Below are all three trec eval results.
+For A1, we implemented an IR system using Apache Lucene. Below are the trec eval results of all three models.
 
 _Apache Lucene Trec Eval Results Screenshot_
 
@@ -225,10 +274,6 @@ _Apache Lucene Trec Eval Results Screenshot_
 
 ![Doc2Vec Trec Eval Screenshot](imgs/Doc2Vec_TrecEval.png)
 
-From the trec eval results, we observe that the Apache Lucene model far outperfroms both the BERT and Doc2Vec implementations of an IR system.
+From the trec eval results, we observe that the Apache Lucene model far outperfroms both the BERT and Doc2Vec implementations of an IR system. BERT performs marginally better than Doc2Vec but both models overall have poor performance.
 
-We also compare the runtimes of the three models. Below is a table sumarrizing our findings:
-
-Again, we notive that the Apache Lucene outperforms BERT and Doc2Vec, having significantly shorter runtimes.
-
-From this, we conclude that
+From this, we conclude that though

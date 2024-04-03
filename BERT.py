@@ -3,20 +3,36 @@ import re
 import time
 import torch
 import numpy as np
-from transformers import RobertaTokenizer, RobertaModel
+from transformers import BertTokenizer, BertModel
 from sklearn.metrics.pairwise import cosine_similarity
 from Parseing import preprocessTokenizeDoc, read_documents, get_queries
 
 # Function to encode embeddings for tokens
-def encode_embeddings(tokenizer, tokens, model):
-    # Tokenize input
-    input_ids = tokenizer.batch_encode_plus(tokens, return_tensors="pt", pad_to_max_length=True)['input_ids']
-    # Compute embeddings using RoBERTa model
+def encode_embeddings(tokens, tokenizer, model):
+    # Truncate tokens to fit BERT's max input length (512 tokens)
+    tokens = tokens[:510]
+    # Convert tokens to input IDs
+    input_ids = tokenizer.convert_tokens_to_ids(tokens)
+    # Add special tokens for BERT input
+    input_ids = [tokenizer.cls_token_id] + input_ids + [tokenizer.sep_token_id]
+    # Pad input if necessary to reach max length
+    input_ids = input_ids + [tokenizer.pad_token_id] * (512 - len(input_ids)) if len(input_ids) < 512 else input_ids[:512]
+    
+    # Create attention mask
+    attention_mask = [1 if token_id != tokenizer.pad_token_id else 0 for token_id in input_ids]
+    
+    # Convert inputs to tensors
+    input_tensor = torch.tensor(input_ids).unsqueeze(0)
+    attention_mask_tensor = torch.tensor(attention_mask).unsqueeze(0)
+    
+    # Compute embeddings using BERT model
     with torch.no_grad():
-        outputs = model(input_ids)
+        outputs = model(input_tensor, attention_mask=attention_mask_tensor)
         embeddings = outputs.last_hidden_state
+    
     # Average pooling of embeddings
     avg_embeddings = torch.mean(embeddings, dim=1).squeeze().numpy()
+    
     return avg_embeddings
 
 # Function to retrieve and rank documents based on query and document embeddings
@@ -38,45 +54,51 @@ def embed_docs_queries(query_path, doc_path, tokenizer, model):
     document_embeddings = {}
     for doc_id, doc_data in documents.items():
         processed_doc = preprocessTokenizeDoc(doc_data['TEXT'])
-        document_embedding = encode_embeddings(tokenizer, processed_doc, model)
+        document_embedding = encode_embeddings(processed_doc, tokenizer, model)
         document_embeddings[doc_id] = document_embedding
     
     # Embed queries
     query_embeddings = {}
     for i, query in enumerate(queries, start=1):
         processed_query = preprocessTokenizeDoc(query)
-        query_embed = encode_embeddings(tokenizer, processed_query, model)
+        query_embed = encode_embeddings(processed_query, tokenizer, model)
         query_embeddings[i] = query_embed
     
-    if not os.path.exists('roberta_res'):
-        os.makedirs('roberta_res')
+    if not os.path.exists('bert_res'):
+        os.makedirs('bert_res')
 
     # Save embeddings
-    np.save('roberta_res/document_embeddings.npy', document_embeddings)
-    np.save('roberta_res/query_embeddings.npy', query_embeddings)
+    np.save('bert_res/document_embeddings.npy', document_embeddings)
+    np.save('bert_res/query_embeddings.npy', query_embeddings)
+
+
 
 # Main function
 def main():
     startTime = time.time()
     
     print("Creating model and tokenizer...")
-    # Load RoBERTa model and tokenizer
-    tokenizer = RobertaTokenizer.from_pretrained('roberta-base')
-    model = RobertaModel.from_pretrained('roberta-base')
+    # Load BERT model and tokenizer
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    model = BertModel.from_pretrained('bert-base-uncased', ignore_mismatched_sizes=True)
 
     # Check if embeddings already exist, if not, create them
-    if not os.path.exists('roberta_res/document_embeddings.npy') or not os.path.exists('roberta_res/query_embeddings.npy'):
+    if not os.path.exists('bert_res/document_embeddings.npy') or not os.path.exists('bert_res/query_embeddings.npy'):
         print("No existing embeddings found. Creating embeddings...")
         embed_docs_queries('Queries.txt', 'coll', tokenizer, model) 
 
     print("Loading embeddings...")
     # Load embeddings from saved files
-    document_embeddings = np.load('roberta_res/document_embeddings.npy', allow_pickle=True).item()
-    query_embeddings = np.load('roberta_res/query_embeddings.npy', allow_pickle=True).item()
+    document_embeddings = np.load('bert_res/document_embeddings.npy', allow_pickle=True).item()
+    query_embeddings = np.load('bert_res/query_embeddings.npy', allow_pickle=True).item()
 
+    endTime = time.time()
+    print("Retrieving and writing results runtime: ", (endTime-startTime), " seconds.")
+
+    startTime = time.time()
     print("Calculating and saving results...")
     # Calculate and save retrieval results
-    with open('RoBERTa_results.txt', 'w') as file:
+    with open('BERT_results.txt', 'w') as file:
         for query_id, query_embed in query_embeddings.items():
             relevant_documents = retrieve_and_rank_documents_with_BERT(query_embed, document_embeddings, 1000)
             for rank, (docno, cossim) in enumerate(relevant_documents, start=1):
@@ -84,8 +106,8 @@ def main():
                 file.write(line + '\n')
 
     endTime = time.time()
-    runTime = endTime - startTime 
-    print(str(runTime), "seconds taken")
+
+    print("Retrieving and writing results runtime: ", (endTime-startTime), " seconds.")
 
 # Execute main function if script is run directly
 if __name__ == "__main__":
